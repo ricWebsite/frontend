@@ -2,6 +2,7 @@
  * ShopCart Component - Organism component for Nozah
  * Displays shopping cart items with checkout functionality
  */
+"use client";
 
 import React from 'react';
 import Button from '../atoms/Button';

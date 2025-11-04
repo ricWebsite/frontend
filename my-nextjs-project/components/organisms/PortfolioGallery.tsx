@@ -2,6 +2,7 @@
  * PortfolioGallery Component - Organism component for Nozah
  * Displays portfolio items in a masonry grid with filtering and lightbox
  */
+"use client";
 
 import React, { useState } from 'react';
 import Image from '../atoms/Image';

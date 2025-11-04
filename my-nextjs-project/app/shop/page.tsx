@@ -34,7 +34,7 @@ const Shop: React.FC = () => {
           name: 'Art Print - Geometric',
           description: 'High-quality art print',
           price: 2500,
-          image: 'https://via.placeholder.com/300x300?text=Art+Print+1',
+          image: 'https://i.pinimg.com/1200x/46/15/3f/46153f73e8b625f9c602303699d67e17.jpg',
           category: 'Prints',
           inStock: true,
           rating: 4.5,
@@ -45,7 +45,7 @@ const Shop: React.FC = () => {
           name: 'Limited Edition Poster',
           description: 'Exclusive limited edition',
           price: 3500,
-          image: 'https://via.placeholder.com/300x300?text=Poster',
+          image: 'https://drive.google.com/drive/folders/1c2hRk_DRD3uGRk_sm3X4FhL8ZN3-de-3',
           category: 'Posters',
           inStock: true,
           rating: 5,
@@ -147,14 +147,14 @@ const Shop: React.FC = () => {
         style={{ backgroundColor: COLORS.WHITE }}
       >
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/">
-            <a
-              className="text-2xl font-bold font-['Great_Vibes']"
-              style={{ color: COLORS.PRIMARY }}
-            >
-              Nozah
-            </a>
-          </Link>
+         <Link
+  href="/"
+  className="text-2xl font-bold font-['Great_Vibes']"
+  style={{ color: COLORS.PRIMARY }}
+>
+  Nozah
+</Link>
+
           <div className="flex gap-4 items-center">
             <button
               onClick={() => setShowCart(!showCart)}
@@ -166,13 +166,12 @@ const Shop: React.FC = () => {
             >
               🛒 Cart ({cartItems.length})
             </button>
-            <Link href="/">
-              <a>
-                <Button variant="ghost" size="sm">
-                  ← Back Home
-                </Button>
-              </a>
-            </Link>
+           <Link href="/" className="inline-block">
+  <Button variant="ghost" size="sm">
+    ← Back Home
+  </Button>
+</Link>
+
           </div>
         </div>
       </nav>

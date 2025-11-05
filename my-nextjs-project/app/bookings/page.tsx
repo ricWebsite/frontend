@@ -4,22 +4,22 @@
 
 "use client";
 
-import React, { useState } from 'react';
-import { Link } from 'wouter';
-import BookingForm from '@/components/molecules/BookingForm';
-import Button from '@/components/atoms/Button';
-import { COLORS } from '@/shared/const';
+import React, { useState } from "react";
+import Link from 'next/link';
+import BookingForm from "@/components/molecules/BookingForm";
+import Button from "@/components/atoms/Button";
+import { COLORS } from "@/shared/const";
 
 const Bookings: React.FC = () => {
-  const [successMessage, setSuccessMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleBookingSuccess = () => {
-    setSuccessMessage('Your booking request has been submitted successfully!');
-    setTimeout(() => setSuccessMessage(''), 5000);
+    setSuccessMessage("Your booking request has been submitted successfully!");
+    setTimeout(() => setSuccessMessage(""), 5000);
   };
 
   const handleBookingError = (error: string) => {
-    console.error('Booking error:', error);
+    console.error("Booking error:", error);
   };
 
   return (
@@ -30,20 +30,17 @@ const Bookings: React.FC = () => {
         style={{ backgroundColor: COLORS.WHITE }}
       >
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/">
-            <a
-              className="text-2xl font-bold font-['Great_Vibes']"
-              style={{ color: COLORS.PRIMARY }}
-            >
-              Nozah
-            </a>
+          <Link
+            href="/"
+            className="text-2xl font-bold font-['Great_Vibes']"
+            style={{ color: COLORS.PRIMARY }}
+          >
+            Nozah
           </Link>
-          <Link href="/">
-            <a>
-              <Button variant="ghost" size="sm">
-                ← Back Home
-              </Button>
-            </a>
+          <Link href="/home">
+            <Button variant="ghost" size="sm">
+              ← Back Home
+            </Button>
           </Link>
         </div>
       </nav>
@@ -118,13 +115,17 @@ const Bookings: React.FC = () => {
                     </p>
                   </li>
                   <li>
-                    <strong style={{ color: COLORS.BLACK }}>Advance Notice:</strong>
+                    <strong style={{ color: COLORS.BLACK }}>
+                      Advance Notice:
+                    </strong>
                     <p style={{ color: COLORS.MEDIUM_GRAY }}>
                       Book at least 1 day in advance
                     </p>
                   </li>
                   <li>
-                    <strong style={{ color: COLORS.BLACK }}>Consultation:</strong>
+                    <strong style={{ color: COLORS.BLACK }}>
+                      Consultation:
+                    </strong>
                     <p style={{ color: COLORS.MEDIUM_GRAY }}>
                       Free initial consultation to discuss your project
                     </p>
@@ -162,12 +163,8 @@ const Bookings: React.FC = () => {
                   <li style={{ color: COLORS.BLACK }}>
                     ✓ Pen Art Illustrations
                   </li>
-                  <li style={{ color: COLORS.BLACK }}>
-                    ✓ Custom Artwork
-                  </li>
-                  <li style={{ color: COLORS.BLACK }}>
-                    ✓ Art Consultation
-                  </li>
+                  <li style={{ color: COLORS.BLACK }}>✓ Custom Artwork</li>
+                  <li style={{ color: COLORS.BLACK }}>✓ Art Consultation</li>
                 </ul>
               </div>
 
@@ -185,7 +182,10 @@ const Bookings: React.FC = () => {
                 >
                   Contact
                 </h3>
-                <p className="text-sm mb-2" style={{ color: COLORS.MEDIUM_GRAY }}>
+                <p
+                  className="text-sm mb-2"
+                  style={{ color: COLORS.MEDIUM_GRAY }}
+                >
                   Have questions? Reach out directly:
                 </p>
                 <a

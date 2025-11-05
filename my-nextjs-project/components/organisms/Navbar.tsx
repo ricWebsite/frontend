@@ -8,7 +8,7 @@ const Navbar = () => {
   const pathname = usePathname();
 
   const links = [
-    { href: "/", label: "Home" },
+    { href: "/home", label: "Home" },
     { href: "/portfolio", label: "Portfolio" },
     { href: "/shop", label: "Shop" },
     { href: "/blog", label: "Blog" },
@@ -17,7 +17,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="flex items-center justify-between px-6 py-4 bg-white shadow-md">
+    <nav className="flex items-center justify-between px-6 py-4 bg-white shadow-md relative z-50">
       <div className="text-2xl font-bold text-pink-500">Nozah</div>
 
       <ul className="flex space-x-6">

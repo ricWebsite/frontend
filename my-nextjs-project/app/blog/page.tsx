@@ -3,10 +3,10 @@
  */
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { Link } from 'wouter';
-import Button from '@/components/atoms/Button';
-import { COLORS } from '@/shared/const';
+import React, { useEffect, useState } from "react";
+import Link from 'next/link';
+import Button from "@/components/atoms/Button";
+import { COLORS } from "@/shared/const";
 
 interface BlogPost {
   id: string;
@@ -29,45 +29,47 @@ const Blog: React.FC = () => {
     setTimeout(() => {
       setPosts([
         {
-          id: '1',
-          title: 'The Art of Tattoo Design',
-          excerpt: 'Exploring the creative process behind meaningful tattoo designs',
+          id: "1",
+          title: "The Art of Tattoo Design",
+          excerpt:
+            "Exploring the creative process behind meaningful tattoo designs",
           content:
-            'Tattoo design is a unique blend of art, culture, and personal expression...',
-          author: 'Nozah',
-          date: '2024-01-20',
-          category: 'Tattoos',
+            "Tattoo design is a unique blend of art, culture, and personal expression...",
+          author: "Nozah",
+          date: "2024-01-20",
+          category: "Tattoos",
           featured: true,
         },
         {
-          id: '2',
-          title: 'Digital Art Trends in 2024',
-          excerpt: 'Latest trends and techniques in digital art creation',
+          id: "2",
+          title: "Digital Art Trends in 2024",
+          excerpt: "Latest trends and techniques in digital art creation",
           content:
-            'The digital art landscape continues to evolve with new tools and techniques...',
-          author: 'Nozah',
-          date: '2024-01-15',
-          category: 'Digital Art',
+            "The digital art landscape continues to evolve with new tools and techniques...",
+          author: "Nozah",
+          date: "2024-01-15",
+          category: "Digital Art",
         },
         {
-          id: '3',
-          title: 'Pen Art Mastery',
-          excerpt: 'Tips and techniques for creating stunning pen illustrations',
+          id: "3",
+          title: "Pen Art Mastery",
+          excerpt:
+            "Tips and techniques for creating stunning pen illustrations",
           content:
-            'Pen art requires precision, patience, and a deep understanding of light and shadow...',
-          author: 'Nozah',
-          date: '2024-01-10',
-          category: 'Pen Art',
+            "Pen art requires precision, patience, and a deep understanding of light and shadow...",
+          author: "Nozah",
+          date: "2024-01-10",
+          category: "Pen Art",
         },
         {
-          id: '4',
-          title: 'Finding Your Artistic Voice',
-          excerpt: 'A journey to discovering your unique artistic style',
+          id: "4",
+          title: "Finding Your Artistic Voice",
+          excerpt: "A journey to discovering your unique artistic style",
           content:
-            'Every artist has a unique voice waiting to be discovered. This journey is personal...',
-          author: 'Nozah',
-          date: '2024-01-05',
-          category: 'General',
+            "Every artist has a unique voice waiting to be discovered. This journey is personal...",
+          author: "Nozah",
+          date: "2024-01-05",
+          category: "General",
         },
       ]);
       setLoading(false);
@@ -76,10 +78,10 @@ const Blog: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -91,20 +93,18 @@ const Blog: React.FC = () => {
         style={{ backgroundColor: COLORS.WHITE }}
       >
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/">
-            <a
-              className="text-2xl font-bold font-['Great_Vibes']"
-              style={{ color: COLORS.PRIMARY }}
-            >
-              Nozah
-            </a>
+          <Link
+            href="/"
+            className="text-2xl font-bold font-['Great_Vibes']"
+            style={{ color: COLORS.PRIMARY }}
+          >
+            Nozah
           </Link>
-          <Link href="/">
-            <a>
-              <Button variant="ghost" size="sm">
-                ← Back Home
-              </Button>
-            </a>
+
+          <Link href="/home" className="inline-block">
+            <Button variant="ghost" size="sm">
+              ← Back Home
+            </Button>
           </Link>
         </div>
       </nav>
@@ -229,7 +229,7 @@ const Blog: React.FC = () => {
                       className="rounded-lg animate-pulse"
                       style={{
                         backgroundColor: COLORS.LIGHT_GRAY,
-                        height: '200px',
+                        height: "200px",
                       }}
                     />
                   ))}
@@ -320,4 +320,3 @@ const Blog: React.FC = () => {
 };
 
 export default Blog;
-

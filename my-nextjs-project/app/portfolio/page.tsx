@@ -4,13 +4,13 @@
 
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { Link } from 'wouter';
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import PortfolioGallery, {
   PortfolioItem,
-} from '@/components/organisms/PortfolioGallery';
-import Button from '@/components/atoms/Button';
-import { COLORS } from '../../shared/const';
+} from "@/components/organisms/PortfolioGallery";
+import Button from "@/components/atoms/Button";
+import { COLORS } from "../../shared/const";
 
 const Portfolio: React.FC = () => {
   const [items, setItems] = useState<PortfolioItem[]>([]);
@@ -21,53 +21,53 @@ const Portfolio: React.FC = () => {
     setTimeout(() => {
       setItems([
         {
-          id: '1',
-          title: 'Geometric Tattoo',
-          description: 'Modern geometric design',
-          image: 'https://via.placeholder.com/400x400?text=Geometric+Tattoo',
-          category: 'tattoos',
-          date: '2024-01-15',
+          id: "1",
+          title: "Geometric Tattoo",
+          description: "Modern geometric design",
+          image: "https://via.placeholder.com/400x400?text=Geometric+Tattoo",
+          category: "tattoos",
+          date: "2024-01-15",
           featured: true,
         },
         {
-          id: '2',
-          title: 'Digital Portrait',
-          description: 'Vibrant digital artwork',
-          image: 'https://via.placeholder.com/400x400?text=Digital+Portrait',
-          category: 'digital',
-          date: '2024-01-10',
+          id: "2",
+          title: "Digital Portrait",
+          description: "Vibrant digital artwork",
+          image: "https://via.placeholder.com/400x400?text=Digital+Portrait",
+          category: "digital",
+          date: "2024-01-10",
         },
         {
-          id: '3',
-          title: 'Ink Illustration',
-          description: 'Detailed pen artwork',
-          image: 'https://via.placeholder.com/400x400?text=Ink+Illustration',
-          category: 'pen',
-          date: '2024-01-05',
+          id: "3",
+          title: "Ink Illustration",
+          description: "Detailed pen artwork",
+          image: "https://via.placeholder.com/400x400?text=Ink+Illustration",
+          category: "pen",
+          date: "2024-01-05",
         },
         {
-          id: '4',
-          title: 'Abstract Tattoo',
-          description: 'Abstract design',
-          image: 'https://via.placeholder.com/400x400?text=Abstract+Tattoo',
-          category: 'tattoos',
-          date: '2023-12-28',
+          id: "4",
+          title: "Abstract Tattoo",
+          description: "Abstract design",
+          image: "https://via.placeholder.com/400x400?text=Abstract+Tattoo",
+          category: "tattoos",
+          date: "2023-12-28",
         },
         {
-          id: '5',
-          title: 'Digital Landscape',
-          description: 'Nature-inspired digital art',
-          image: 'https://via.placeholder.com/400x400?text=Digital+Landscape',
-          category: 'digital',
-          date: '2023-12-20',
+          id: "5",
+          title: "Digital Landscape",
+          description: "Nature-inspired digital art",
+          image: "https://via.placeholder.com/400x400?text=Digital+Landscape",
+          category: "digital",
+          date: "2023-12-20",
         },
         {
-          id: '6',
-          title: 'Contemporary Art',
-          description: 'Modern contemporary piece',
-          image: 'https://via.placeholder.com/400x400?text=Contemporary+Art',
-          category: 'contemporary',
-          date: '2023-12-15',
+          id: "6",
+          title: "Contemporary Art",
+          description: "Modern contemporary piece",
+          image: "https://via.placeholder.com/400x400?text=Contemporary+Art",
+          category: "contemporary",
+          date: "2023-12-15",
         },
       ]);
       setLoading(false);
@@ -82,20 +82,17 @@ const Portfolio: React.FC = () => {
         style={{ backgroundColor: COLORS.WHITE }}
       >
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/">
-            <a
-              className="text-2xl font-bold font-['Great_Vibes']"
-              style={{ color: COLORS.PRIMARY }}
-            >
-              Nozah
-            </a>
+          <Link
+            href="/"
+            className="text-2xl font-bold font-['Great_Vibes']"
+            style={{ color: COLORS.PRIMARY }}
+          >
+            Nozah
           </Link>
-          <Link href="/">
-            <a>
-              <Button variant="ghost" size="sm">
-                ← Back Home
-              </Button>
-            </a>
+          <Link href="/home">
+            <Button variant="ghost" size="sm">
+              ← Back Home
+            </Button>
           </Link>
         </div>
       </nav>
@@ -149,11 +146,9 @@ const Portfolio: React.FC = () => {
             Let's collaborate to create something unique for you
           </p>
           <Link href="/bookings">
-            <a>
               <Button variant="primary" size="lg">
                 Request a Booking
               </Button>
-            </a>
           </Link>
         </div>
       </section>
@@ -174,4 +169,3 @@ const Portfolio: React.FC = () => {
 };
 
 export default Portfolio;
-

@@ -4,22 +4,22 @@
 
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { Link } from 'wouter';
-import ReviewCard, { ReviewData } from '@/components/molecules/ReviewCard';
-import Button from '@/components/atoms/Button';
-import Input from '@/components/atoms/Input';
-import { COLORS } from '@/shared/const';
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import ReviewCard, { ReviewData } from "@/components/molecules/ReviewCard";
+import Button from "@/components/atoms/Button";
+import Input from "@/components/atoms/Input";
+import { COLORS } from "@/shared/const";
 
 const Reviews: React.FC = () => {
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    author: '',
-    email: '',
+    author: "",
+    email: "",
     rating: 5,
-    content: '',
+    content: "",
   });
 
   useEffect(() => {
@@ -27,40 +27,40 @@ const Reviews: React.FC = () => {
     setTimeout(() => {
       setReviews([
         {
-          id: '1',
-          author: 'Sarah Johnson',
+          id: "1",
+          author: "Sarah Johnson",
           rating: 5,
           content:
-            'Nozah created an amazing tattoo design that perfectly captured my vision. Her attention to detail and professionalism are outstanding!',
-          date: '2024-01-15',
-          avatar: 'https://via.placeholder.com/48x48?text=SJ',
+            "Nozah created an amazing tattoo design that perfectly captured my vision. Her attention to detail and professionalism are outstanding!",
+          date: "2024-01-15",
+          avatar: "https://via.placeholder.com/48x48?text=SJ",
         },
         {
-          id: '2',
-          author: 'Michael Chen',
+          id: "2",
+          author: "Michael Chen",
           rating: 5,
           content:
-            'The digital art piece I commissioned is absolutely stunning. Nozah understood my requirements and delivered beyond expectations.',
-          date: '2024-01-10',
-          avatar: 'https://via.placeholder.com/48x48?text=MC',
+            "The digital art piece I commissioned is absolutely stunning. Nozah understood my requirements and delivered beyond expectations.",
+          date: "2024-01-10",
+          avatar: "https://via.placeholder.com/48x48?text=MC",
         },
         {
-          id: '3',
-          author: 'Emma Williams',
+          id: "3",
+          author: "Emma Williams",
           rating: 4,
           content:
-            'Great experience working with Nozah. The pen art illustrations are beautiful and the communication was excellent throughout.',
-          date: '2024-01-05',
-          avatar: 'https://via.placeholder.com/48x48?text=EW',
+            "Great experience working with Nozah. The pen art illustrations are beautiful and the communication was excellent throughout.",
+          date: "2024-01-05",
+          avatar: "https://via.placeholder.com/48x48?text=EW",
         },
         {
-          id: '4',
-          author: 'David Okonkwo',
+          id: "4",
+          author: "David Okonkwo",
           rating: 5,
           content:
-            'Nozah is a true professional. Her artistic skills are exceptional and she brings creativity to every project. Highly recommended!',
-          date: '2023-12-28',
-          avatar: 'https://via.placeholder.com/48x48?text=DO',
+            "Nozah is a true professional. Her artistic skills are exceptional and she brings creativity to every project. Highly recommended!",
+          date: "2023-12-28",
+          avatar: "https://via.placeholder.com/48x48?text=DO",
         },
       ]);
       setLoading(false);
@@ -75,7 +75,7 @@ const Reviews: React.FC = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'rating' ? parseInt(value) : value,
+      [name]: name === "rating" ? parseInt(value) : value,
     }));
   };
 
@@ -90,13 +90,15 @@ const Reviews: React.FC = () => {
       date: new Date().toISOString(),
     };
     setReviews((prev) => [newReview, ...prev]);
-    setFormData({ author: '', email: '', rating: 5, content: '' });
+    setFormData({ author: "", email: "", rating: 5, content: "" });
     setShowForm(false);
   };
 
   const averageRating =
     reviews.length > 0
-      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+      ? (
+          reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+        ).toFixed(1)
       : 0;
 
   return (
@@ -107,20 +109,18 @@ const Reviews: React.FC = () => {
         style={{ backgroundColor: COLORS.WHITE }}
       >
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/">
-            <a
-              className="text-2xl font-bold font-['Great_Vibes']"
-              style={{ color: COLORS.PRIMARY }}
-            >
-              Nozah
-            </a>
+          <Link
+            href="/"
+            className="text-2xl font-bold font-['Great_Vibes']"
+            style={{ color: COLORS.PRIMARY }}
+          >
+            Nozah
           </Link>
-          <Link href="/">
-            <a>
-              <Button variant="ghost" size="sm">
-                ← Back Home
-              </Button>
-            </a>
+
+          <Link href="/home">
+            <Button variant="ghost" size="sm">
+              ← Back Home
+            </Button>
           </Link>
         </div>
       </nav>
@@ -205,11 +205,11 @@ const Reviews: React.FC = () => {
           {/* Review Form Toggle */}
           <div className="text-center mb-12">
             <Button
-              variant={showForm ? 'secondary' : 'primary'}
+              variant={showForm ? "secondary" : "primary"}
               size="lg"
               onClick={() => setShowForm(!showForm)}
             >
-              {showForm ? 'Cancel' : 'Leave a Review'}
+              {showForm ? "Cancel" : "Leave a Review"}
             </Button>
           </div>
 
@@ -302,12 +302,7 @@ const Reviews: React.FC = () => {
                   />
                 </div>
 
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="lg"
-                  fullWidth
-                >
+                <Button type="submit" variant="primary" size="lg" fullWidth>
                   Submit Review
                 </Button>
               </form>
@@ -331,7 +326,7 @@ const Reviews: React.FC = () => {
                     className="rounded-lg animate-pulse"
                     style={{
                       backgroundColor: COLORS.LIGHT_GRAY,
-                      height: '150px',
+                      height: "150px",
                     }}
                   />
                 ))}
@@ -378,4 +373,3 @@ const Reviews: React.FC = () => {
 };
 
 export default Reviews;
-

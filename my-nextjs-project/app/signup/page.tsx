@@ -3,21 +3,21 @@
 import Link from "next/link";
 import { useState } from "react";
 
-export default function LoginPage() {
+export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Add login logic (API call, redirect)
-    console.log("Logging in with:", email, password);
+    // TODO: Add signup logic (API call, redirect)
+    console.log("Signing up:", email, password);
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
-      <h2 className="text-3xl font-semibold mb-6">Login to Your Account</h2>
+      <h2 className="text-3xl font-semibold mb-6">Create an Account</h2>
       <form
-        onSubmit={handleLogin}
+        onSubmit={handleSignup}
         className="w-full max-w-sm bg-white p-6 rounded-lg shadow-md"
       >
         <input
@@ -38,16 +38,16 @@ export default function LoginPage() {
         />
         <button
           type="submit"
-          className="w-full bg-black text-white py-2 rounded-md"
+          className="w-full bg-yellow-400 text-black py-2 rounded-md"
         >
-          Login
+          Sign Up
         </button>
       </form>
 
       <p className="mt-4 text-gray-600">
-        Don't have an account?{" "}
-        <Link href="/signup" className="text-yellow-500 hover:underline">
-          Sign up
+        Already have an account?{" "}
+        <Link href="/login" className="text-black hover:underline">
+          Login
         </Link>
       </p>
     </div>

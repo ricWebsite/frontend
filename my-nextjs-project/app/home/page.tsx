@@ -6,8 +6,12 @@ import Link from "next/link";
 export default function LandingPage() {
   return (
     <main className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-[#FAF9F6] via-[#FFF8E7] to-[#F0F8F0] text-gray-800">
+
+       {/* Navbar */}
+      <Navbar />
+
       {/* Wavy Background Elements */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 pointer-events-none">
         {/* Top wave */}
         <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-transparent via-[#FFD1DC] to-transparent opacity-20">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -28,9 +32,7 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Navbar */}
-      <Navbar />
-
+     
       {/* Hero Section */}
       <section className="relative z-10 flex flex-col items-center justify-center h-[70vh] px-4">
         <div className="text-center max-w-4xl mx-auto">

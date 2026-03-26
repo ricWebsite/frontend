@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { authApi, unwrapSingle, type User } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { refreshAuth } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,6 +24,7 @@ export default function LoginPage() {
       const response = await authApi.login({ email, password });
       const user = unwrapSingle<User>(response) ?? response.data;
       const returnTo = searchParams.get("returnTo");
+      await refreshAuth();
 
       if (returnTo) {
         router.push(returnTo);

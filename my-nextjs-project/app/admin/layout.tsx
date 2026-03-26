@@ -1,6 +1,16 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isAuthPage = pathname === "/admin/login" || pathname === "/admin/register";
+
+  if (isAuthPage) {
+    return <main className="min-h-screen">{children}</main>;
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       <aside className="w-72 bg-white shadow-lg flex flex-col p-6">

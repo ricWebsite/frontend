@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { authApi, unwrapSingle, type User } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 export default function StaffLoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { refreshAuth } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,6 +25,7 @@ export default function StaffLoginPage() {
       const response = await authApi.loginStaff({ email, password });
       const user = unwrapSingle<User>(response) ?? response.data;
       const returnTo = searchParams.get("returnTo");
+      await refreshAuth();
 
       if (returnTo) {
         router.push(returnTo);
@@ -32,7 +35,12 @@ export default function StaffLoginPage() {
         setError("This account is not staff.");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Staff login failed");
+      const message = err instanceof Error ? err.message : "Staff login failed";
+      if (message.toLowerCase().includes("verify") || message.toLowerCase().includes("email")) {
+        setError("Email not verified. Complete verification from Staff Register before logging in.");
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }

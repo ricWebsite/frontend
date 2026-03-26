@@ -37,6 +37,15 @@ export interface AuthPayload {
   name?: string;
 }
 
+export interface VerifyEmailPayload {
+  email: string;
+  code: string;
+}
+
+export interface ResendVerificationPayload {
+  email: string;
+}
+
 export interface BookingPayload {
   name: string;
   email: string;
@@ -246,22 +255,36 @@ export function unwrapSingle<T>(payload: unknown): T | null {
 export const authApi = {
   register: (data: AuthPayload) => api.post<ApiResponse<User>>(`${API_ENDPOINTS.AUTH}/register`, data),
   login: (data: AuthPayload) => api.post<ApiResponse<User>>(`${API_ENDPOINTS.AUTH}/login`, data),
-  registerStaff: (data: AuthPayload, superadminToken?: string) =>
+  registerStaff: (data: AuthPayload) =>
     fetch(`${API_BASE_URL}${API_ENDPOINTS.AUTH}/staff/register`, {
       method: "POST",
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        ...(superadminToken ? { Authorization: `Bearer ${superadminToken}` } : {}),
       },
       body: JSON.stringify(data),
     }).then(async (res) => {
+      const contentType = res.headers.get("content-type") ?? "";
+      const payload = contentType.includes("application/json")
+        ? await res.json()
+        : await res.text();
+
       if (!res.ok) {
-        throw new ApiError(`HTTP ${res.status}`, res.status, await res.text());
+        const message =
+          typeof payload === "object" && payload !== null && "message" in payload
+            ? String((payload as { message: string }).message)
+            : `HTTP ${res.status}`;
+
+        throw new ApiError(message, res.status, JSON.stringify(payload));
       }
-      return (await res.json()) as ApiResponse<User>;
+
+      return payload as ApiResponse<User>;
     }),
   loginStaff: (data: AuthPayload) => api.post<ApiResponse<User>>(`${API_ENDPOINTS.AUTH}/staff/login`, data),
+  verifyStaffEmail: (data: VerifyEmailPayload) =>
+    api.post<ApiResponse<User>>(`${API_ENDPOINTS.AUTH}/staff/verify-email`, data),
+  resendStaffVerification: (data: ResendVerificationPayload) =>
+    api.post<ApiResponse<null>>(`${API_ENDPOINTS.AUTH}/staff/resend-verification`, data),
   me: () => api.get<ApiResponse<User>>(`${API_ENDPOINTS.AUTH}/me`),
 };
 

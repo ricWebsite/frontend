@@ -4,9 +4,11 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Button from "@/components/atoms/Button";
+import { shopApi, unwrapSingle } from "@/lib/api";
 import { COLORS } from "@/shared/const";
 
 interface ProductData {
+  _id?: string;
   id: string;
   name: string;
   description: string;
@@ -18,55 +20,66 @@ interface ProductData {
   reviews: number;
 }
 
+interface LocalCartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image: string;
+}
+
 const ProductDetailsPage: React.FC = () => {
   const { id } = useParams(); // grabs /shop/[id]
   const [product, setProduct] = useState<ProductData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    // Simulate fetching product by id
-    setTimeout(() => {
-      const products: ProductData[] = [
-        {
-          id: "1",
-          name: "Art Print - Geometric",
-          description: "High-quality art print.",
-          price: 2500,
-          image: "https://i.pinimg.com/1200x/46/15/3f/46153f73e8b625f9c602303699d67e17.jpg",
-          category: "Prints",
-          inStock: true,
-          rating: 4.5,
-          reviews: 12,
-        },
-        {
-          id: "2",
-          name: "Limited Edition Poster",
-          description: "Exclusive limited edition poster.",
-          price: 3500,
-          image: "https://via.placeholder.com/600x600?text=Poster",
-          category: "Posters",
-          inStock: true,
-          rating: 5,
-          reviews: 8,
-        },
-        {
-          id: "3",
-          name: "Digital Art Pack",
-          description: "Collection of digital designs.",
-          price: 1500,
-          image: "https://via.placeholder.com/600x600?text=Digital+Pack",
-          category: "Digital",
-          inStock: true,
-          rating: 4,
-          reviews: 5,
-        },
-      ];
+    const fetchProduct = async () => {
+      setLoading(true);
+      setError("");
 
-      const found = products.find((p) => p.id === id);
-      setProduct(found || null);
-      setLoading(false);
-    }, 400);
+      try {
+        const response = await shopApi.getProductById(String(id));
+        const resolved = unwrapSingle<ProductData>(response);
+        setProduct(resolved ?? null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load product");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void fetchProduct();
   }, [id]);
+
+  const handleAddToCart = () => {
+    if (!product) return;
+
+    const savedCart = localStorage.getItem("cart");
+    const cart: LocalCartItem[] = savedCart ? JSON.parse(savedCart) : [];
+    const productId = product.id || product._id;
+
+    if (!productId) {
+      return;
+    }
+
+    const existingIndex = cart.findIndex((item) => item.id === productId);
+
+    if (existingIndex >= 0) {
+      cart[existingIndex].quantity += 1;
+    } else {
+      cart.push({
+        id: productId,
+        name: product.name,
+        price: product.price,
+        quantity: 1,
+        image: product.image,
+      });
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+  };
 
   if (loading) {
     return (
@@ -76,10 +89,10 @@ const ProductDetailsPage: React.FC = () => {
     );
   }
 
-  if (!product) {
+  if (error || !product) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
-        <h1 className="text-3xl font-semibold mb-4">Product not found</h1>
+        <h1 className="text-3xl font-semibold mb-4">{error || "Product not found"}</h1>
         <Link href="/shop">
           <Button variant="ghost">← Back to Shop</Button>
         </Link>
@@ -119,7 +132,7 @@ const ProductDetailsPage: React.FC = () => {
           </p>
 
           <div className="flex gap-4">
-            <Button variant="primary">Add to Cart</Button>
+            <Button variant="primary" onClick={handleAddToCart}>Add to Cart</Button>
             <Link href="/shop">
               <Button variant="ghost">← Back to Shop</Button>
             </Link>

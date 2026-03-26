@@ -1,6 +1,7 @@
-import dynamic from "next/dynamic";
+"use client";
+
 import { useEffect, useState } from "react";
-import axios from "@/lib/axios";
+import { adminApi, shopApi, unwrapCollection } from "@/lib/api";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({ users: 0, orders: 0, products: 0 });
@@ -9,12 +10,12 @@ export default function DashboardPage() {
     (async () => {
       try {
         const [u, o, p] = await Promise.all([
-          axios.get("/admin/users").then(r => r.data.length).catch(() => 0),
-          axios.get("/shop/orders/all").then(r => r.data.length).catch(() => 0),
-          axios.get("/shop").then(r => r.data.length).catch(() => 0),
+          adminApi.getUsers().then((r) => unwrapCollection(r).length).catch(() => 0),
+          shopApi.getAllOrders().then((r) => unwrapCollection(r).length).catch(() => 0),
+          shopApi.getProducts().then((r) => unwrapCollection(r).length).catch(() => 0),
         ]);
         setStats({ users: u, orders: o, products: p });
-      } catch (err) { /* ignore */ }
+      } catch { /* ignore */ }
     })();
   }, []);
 

@@ -2,7 +2,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/context/ThemeContext";
-import Navbar from "@/components/organisms/Navbar";
+import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata = {
   title: "Nozah",
@@ -15,10 +15,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ErrorBoundary>
           <ThemeProvider defaultTheme="light">
-            {children}
+            <AuthProvider>
+              {children}
 
-            {/* ✅ Global toaster for notifications */}
-            <Toaster />
+              {/* ✅ Global toaster for notifications */}
+              <Toaster />
+            </AuthProvider>
           </ThemeProvider>
         </ErrorBoundary>
       </body>

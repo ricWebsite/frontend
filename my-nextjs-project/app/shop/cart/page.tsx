@@ -5,10 +5,12 @@ import ShopCart, { CartItem } from '@/components/organisms/ShopCart';
 import { useRouter } from 'next/navigation';
 import { COLORS } from '@/shared/const';
 import Link from 'next/link';
+import { shopApi } from '@/lib/api';
 
 export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
 
   // Load cart items from localStorage
@@ -39,20 +41,36 @@ export default function CartPage() {
   };
 
   // Handle checkout action
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (cartItems.length === 0) {
       alert('Your cart is empty. Add items to proceed.');
       return;
     }
 
+    setError('');
     setLoading(true);
-    setTimeout(() => {
+
+    try {
+      const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      await shopApi.createOrder({
+        items: cartItems.map((item) => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+        })),
+        total,
+      });
+
       setLoading(false);
       alert('✅ Checkout successful!');
       localStorage.removeItem('cart');
       setCartItems([]);
       router.push('/shop'); // Go back to shop after checkout
-    }, 1500);
+    } catch (err) {
+      setLoading(false);
+      setError(err instanceof Error ? err.message : 'Checkout failed');
+    }
   };
 
   return (
@@ -82,6 +100,7 @@ export default function CartPage() {
           onCheckout={handleCheckout}
           loading={loading}
         />
+        {error && <p className="mt-4 text-red-600">{error}</p>}
       </div>
     </div>
   );

@@ -9,12 +9,14 @@ import Link from "next/link";
 import ReviewCard, { ReviewData } from "@/components/molecules/ReviewCard";
 import Button from "@/components/atoms/Button";
 import Input from "@/components/atoms/Input";
+import { reviewApi, unwrapCollection } from "@/lib/api";
 import { COLORS } from "@/shared/const";
 
 const Reviews: React.FC = () => {
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     author: "",
     email: "",
@@ -23,48 +25,20 @@ const Reviews: React.FC = () => {
   });
 
   useEffect(() => {
-    // Simulate fetching reviews
-    setTimeout(() => {
-      setReviews([
-        {
-          id: "1",
-          author: "Sarah Johnson",
-          rating: 5,
-          content:
-            "Nozah created an amazing tattoo design that perfectly captured my vision. Her attention to detail and professionalism are outstanding!",
-          date: "2024-01-15",
-          avatar: "https://via.placeholder.com/48x48?text=SJ",
-        },
-        {
-          id: "2",
-          author: "Michael Chen",
-          rating: 5,
-          content:
-            "The digital art piece I commissioned is absolutely stunning. Nozah understood my requirements and delivered beyond expectations.",
-          date: "2024-01-10",
-          avatar: "https://via.placeholder.com/48x48?text=MC",
-        },
-        {
-          id: "3",
-          author: "Emma Williams",
-          rating: 4,
-          content:
-            "Great experience working with Nozah. The pen art illustrations are beautiful and the communication was excellent throughout.",
-          date: "2024-01-05",
-          avatar: "https://via.placeholder.com/48x48?text=EW",
-        },
-        {
-          id: "4",
-          author: "David Okonkwo",
-          rating: 5,
-          content:
-            "Nozah is a true professional. Her artistic skills are exceptional and she brings creativity to every project. Highly recommended!",
-          date: "2023-12-28",
-          avatar: "https://via.placeholder.com/48x48?text=DO",
-        },
-      ]);
-      setLoading(false);
-    }, 500);
+    const fetchReviews = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const response = await reviewApi.getAll();
+        setReviews(unwrapCollection<ReviewData>(response));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load reviews");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void fetchReviews();
   }, []);
 
   const handleFormChange = (
@@ -79,19 +53,19 @@ const Reviews: React.FC = () => {
     }));
   };
 
-  const handleSubmitReview = (e: React.FormEvent) => {
+  const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would submit to the backend
-    const newReview: ReviewData = {
-      id: String(reviews.length + 1),
-      author: formData.author,
-      rating: formData.rating,
-      content: formData.content,
-      date: new Date().toISOString(),
-    };
-    setReviews((prev) => [newReview, ...prev]);
-    setFormData({ author: "", email: "", rating: 5, content: "" });
-    setShowForm(false);
+    setError("");
+
+    try {
+      await reviewApi.create(formData);
+      const response = await reviewApi.getAll();
+      setReviews(unwrapCollection<ReviewData>(response));
+      setFormData({ author: "", email: "", rating: 5, content: "" });
+      setShowForm(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to submit review");
+    }
   };
 
   const averageRating =
@@ -317,6 +291,8 @@ const Reviews: React.FC = () => {
             >
               Client Reviews
             </h2>
+
+            {error && <p className="mb-4 text-red-600">{error}</p>}
 
             {loading ? (
               <div className="space-y-6">

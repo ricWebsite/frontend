@@ -2,8 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import Link from 'next/link';
+import { useRouter } from "next/navigation";
 import ProductCard, { ProductData } from "@/components/molecules/ProductCard";
 import Button from "@/components/atoms/Button";
+import { shopApi, unwrapCollection } from "@/lib/api";
 import { COLORS } from "../../shared/const";
 
 interface CartItem {
@@ -14,10 +16,14 @@ interface CartItem {
   image: string;
 }
 
+type ProductWithOptionalId = ProductData & { _id?: string };
+
 const Shop: React.FC = () => {
+  const router = useRouter();
   const [products, setProducts] = useState<ProductData[]>([]);
   const [loading, setLoading] = useState(true);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     // Load existing cart from localStorage
@@ -26,58 +32,21 @@ const Shop: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Fetch simulated products
-    setTimeout(() => {
-      setProducts([
-        {
-          id: "1",
-          name: "Art Print - Geometric",
-          description: "High-quality art print",
-          price: 2500,
-          image:
-            "https://i.pinimg.com/1200x/46/15/3f/46153f73e8b625f9c602303699d67e17.jpg",
-          category: "Prints",
-          inStock: true,
-          rating: 4.5,
-          reviews: 12,
-        },
-        {
-          id: "2",
-          name: "Limited Edition Poster",
-          description: "Exclusive limited edition",
-          price: 3500,
-          image:
-            "https://via.placeholder.com/300x300?text=Limited+Edition+Poster",
-          category: "Posters",
-          inStock: true,
-          rating: 5,
-          reviews: 8,
-        },
-        {
-          id: "3",
-          name: "Digital Art Pack",
-          description: "Collection of digital designs",
-          price: 1500,
-          image: "https://via.placeholder.com/300x300?text=Digital+Pack",
-          category: "Digital",
-          inStock: true,
-          rating: 4,
-          reviews: 5,
-        },
-        {
-          id: "4",
-          name: "Merchandise T-Shirt",
-          description: "Premium quality t-shirt",
-          price: 2000,
-          image: "https://via.placeholder.com/300x300?text=T-Shirt",
-          category: "Merchandise",
-          inStock: true,
-          rating: 4.5,
-          reviews: 15,
-        },
-      ]);
-      setLoading(false);
-    }, 500);
+    const fetchProducts = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await shopApi.getProducts();
+        setProducts(unwrapCollection<ProductData>(response));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load products");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void fetchProducts();
   }, []);
 
   // Add to cart handler
@@ -177,14 +146,16 @@ const Shop: React.FC = () => {
                 />
               ))}
             </div>
+          ) : error ? (
+            <p className="text-red-600">{error}</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.map((product) => (
                 <ProductCard
-                  key={product.id}
+                  key={(product as ProductWithOptionalId)._id || product.id}
                   product={product}
                   onAddToCart={handleAddToCart}
-                  onViewDetails={(id) => console.log("View details:", id)}
+                  onViewDetails={(id) => router.push(`/shop/${id}`)}
                 />
               ))}
             </div>

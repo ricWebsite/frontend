@@ -1,15 +1,31 @@
 "use client";
 import { useEffect, useState } from "react";
-import axios from "@/lib/axios";
+import { shopApi, unwrapCollection } from "@/lib/api";
+
+type OrderItem = {
+  _id?: string;
+  productId?: string;
+  name?: string;
+  quantity: number;
+  price: number;
+};
+
+type Order = {
+  _id: string;
+  email?: string;
+  total: number;
+  status?: string;
+  items: OrderItem[];
+};
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<any[]>([]);
-  const [sel, setSel] = useState<any | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [sel, setSel] = useState<Order | null>(null);
 
   const fetch = async () => {
     try {
-      const res = await axios.get("/shop/orders/all");
-      setOrders(res.data);
+      const res = await shopApi.getAllOrders();
+      setOrders(unwrapCollection(res));
     } catch (e) {
       console.error(e);
     }
@@ -66,7 +82,7 @@ export default function OrdersPage() {
               <div className="mt-4">
                 <h3 className="font-semibold">Items</h3>
                 <ul className="mt-2">
-                  {sel.items.map((it:any) => (
+                  {sel.items.map((it) => (
                     <li key={it._id || it.productId} className="py-2 border-b">
                       <div className="flex justify-between">
                         <div>

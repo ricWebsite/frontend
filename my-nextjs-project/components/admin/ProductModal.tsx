@@ -1,8 +1,24 @@
 "use client";
-import { useEffect, useState } from "react";
-import axios from "@/lib/axios";
+import { type ChangeEvent, useEffect, useState } from "react";
+import { shopApi } from "@/lib/api";
 
-export default function ProductModal({ open, setOpen, product, onSaved }: any) {
+type ProductForm = {
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  stock: number;
+  images: string[];
+};
+
+type ProductModalProps = {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  product: ({ _id: string } & Partial<ProductForm>) | null;
+  onSaved: () => void;
+};
+
+export default function ProductModal({ open, setOpen, product, onSaved }: ProductModalProps) {
   const [form, setForm] = useState({ name: "", description: "", price: 0, category: "", stock: 0, images: [] as string[] });
   const [uploading, setUploading] = useState(false);
 
@@ -17,9 +33,9 @@ export default function ProductModal({ open, setOpen, product, onSaved }: any) {
   const handleSave = async () => {
     try {
       if (product) {
-        await axios.put(`/shop/${product._id}`, form);
+        await shopApi.updateProduct(product._id, form);
       } else {
-        await axios.post(`/shop`, form);
+        await shopApi.createProduct(form);
       }
       onSaved();
       close();
@@ -30,14 +46,14 @@ export default function ProductModal({ open, setOpen, product, onSaved }: any) {
   };
 
   // placeholder uploader - change to actual file upload endpoint if you have one
-  const handleImageUpload = async (e: any) => {
+  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
     // Simple client-side base64 (not ideal for production). Replace with real upload.
     const reader = new FileReader();
     reader.onload = () => {
-      setForm((s: any) => ({ ...s, images: [...s.images, reader.result as string] }));
+      setForm((s) => ({ ...s, images: [...s.images, reader.result as string] }));
       setUploading(false);
     };
     reader.readAsDataURL(file);
@@ -66,7 +82,7 @@ export default function ProductModal({ open, setOpen, product, onSaved }: any) {
             {uploading && <span>Uploading...</span>}
           </div>
           <div className="flex gap-2 mt-3">
-            {form.images.map((src:any, idx:number) => (
+            {form.images.map((src, idx) => (
               <img key={idx} src={src} className="w-24 h-16 object-cover rounded" alt="img"/>
             ))}
           </div>

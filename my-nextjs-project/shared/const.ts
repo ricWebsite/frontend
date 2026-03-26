@@ -12,14 +12,17 @@ export const CART_STORAGE_KEY = 'nozah_cart';
 export const FAVORITES_STORAGE_KEY = 'nozah_favorites';
 
 // API Configuration
-export const API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:8000';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 export const API_ENDPOINTS = {
+  AUTH: '/api/auth',
+  ADMIN: '/api/admin',
   PORTFOLIO: '/api/portfolio',
   BOOKINGS: '/api/bookings',
   BLOG: '/api/blog',
   REVIEWS: '/api/reviews',
   SHOP: '/api/shop',
   PRODUCTS: '/api/shop',
+  ORDER: '/api/shop/order',
   ORDERS: '/api/shop/orders',
   COMMENTS: '/api/blog/comments',
 };

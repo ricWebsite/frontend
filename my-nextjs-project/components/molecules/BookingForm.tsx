@@ -269,7 +269,8 @@ const BookingForm: React.FC<BookingFormProps> = ({ onSuccess, onError }) => {
           }}
           required
         >
-          <option value="tattoo">Tattoo Design</option>\n          <option value="digital">Digital Art</option>
+          <option value="tattoo">Tattoo Design</option>
+          <option value="digital">Digital Art</option>
           <option value="pen">Pen Art</option>
           <option value="custom">Custom Artwork</option>
         </select>

@@ -1,29 +1,36 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "../../../lib/axios";
+import { adminApi, unwrapCollection } from "@/lib/api";
+
+type AdminUser = {
+  _id: string;
+  name: string;
+  email: string;
+  role: "user" | "admin" | "superadmin";
+};
 
 export default function UsersPage() {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
 
   const fetchUsers = async () => {
-    const res = await axios.get("/admin/users");
-    setUsers(res.data);
+    const res = await adminApi.getUsers();
+    setUsers(unwrapCollection(res));
   };
 
   const promote = async (id: string) => {
-    await axios.put(`/admin/make-admin/${id}`);
+    await adminApi.makeAdmin(id);
     fetchUsers();
   };
 
   const demote = async (id: string) => {
-    await axios.put(`/admin/remove-admin/${id}`);
+    await adminApi.removeAdmin(id);
     fetchUsers();
   };
 
   const remove = async (id: string) => {
     if (!confirm("Delete this user?")) return;
-    await axios.delete(`/admin/delete-user/${id}`);
+    await adminApi.deleteUser(id);
     fetchUsers();
   };
 
@@ -47,7 +54,7 @@ export default function UsersPage() {
           </thead>
 
           <tbody>
-            {users.map((u: any) => (
+            {users.map((u) => (
               <tr key={u._id} className="border-b">
                 <td className="p-2">{u.name}</td>
                 <td className="p-2">{u.email}</td>

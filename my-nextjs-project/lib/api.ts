@@ -1,12 +1,12 @@
-/**
- * API utility module for Nozah Artist Portfolio
- * Handles all HTTP requests to the backend
- */
+import { API_BASE_URL, API_ENDPOINTS, ERROR_MESSAGES, HTTP_STATUS } from "@/shared/const";
 
-// Ambient module declaration to satisfy TypeScript when the '@shared/const' path alias
-// or its declaration file is not available in this environment.
-
-import { API_BASE_URL, API_ENDPOINTS, ERROR_MESSAGES, HTTP_STATUS } from '../shared/const';
+export interface ApiEnvelope<T> {
+  success?: boolean;
+  message?: string;
+  error?: string;
+  data?: T;
+  items?: T[];
+}
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -23,19 +23,82 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
+export interface User {
+  _id?: string;
+  id?: string;
+  name?: string;
+  email: string;
+  role?: "user" | "admin" | "superadmin";
+}
+
+export interface AuthPayload {
+  email: string;
+  password: string;
+  name?: string;
+}
+
+export interface BookingPayload {
+  name: string;
+  email: string;
+  phone: string;
+  date: string;
+  time: string;
+  service: string;
+  description?: string;
+}
+
+export interface BlogPayload {
+  title: string;
+  excerpt?: string;
+  content: string;
+  category?: string;
+}
+
+export interface ReviewPayload {
+  author: string;
+  email?: string;
+  rating: number;
+  content: string;
+}
+
+export interface ProductPayload {
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  stock: number;
+  images?: string[];
+}
+
+export interface OrderPayload {
+  items: Array<{ productId?: string; id?: string; name?: string; price: number; quantity: number }>;
+  email?: string;
+  total: number;
+}
+
+class ApiError extends Error {
+  public statusCode: number;
+  public details: string;
+
+  constructor(message: string, statusCode: number, details: string) {
+    super(message);
+    this.name = "ApiError";
+    this.statusCode = statusCode;
+    this.details = details;
+  }
+}
+
 class ApiClient {
-  private baseUrl: string;
-  private timeout: number = 30000;
+  private readonly baseUrl: string;
+  private readonly timeout = 30000;
 
   constructor(baseUrl: string = API_BASE_URL) {
     this.baseUrl = baseUrl;
   }
 
-  /**
-   * Make a GET request
-   */
-  async get<T>(endpoint: string, params?: Record<string, any>): Promise<T> {
+  async get<T>(endpoint: string, params?: Record<string, string | number | boolean | undefined | null>): Promise<T> {
     const url = new URL(`${this.baseUrl}${endpoint}`);
+
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
@@ -44,62 +107,37 @@ class ApiClient {
       });
     }
 
-    return this.request<T>(url.toString(), {
-      method: 'GET',
-    });
+    return this.request<T>(url.toString(), { method: "GET" });
   }
 
-  /**
-   * Make a POST request
-   */
-  async post<T>(endpoint: string, data?: any): Promise<T> {
+  async post<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(`${this.baseUrl}${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
   }
 
-  /**
-   * Make a PUT request
-   */
-  async put<T>(endpoint: string, data?: any): Promise<T> {
+  async put<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(`${this.baseUrl}${endpoint}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
   }
 
-  /**
-   * Make a PATCH request
-   */
-  async patch<T>(endpoint: string, data?: any): Promise<T> {
+  async patch<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(`${this.baseUrl}${endpoint}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
   }
 
-  /**
-   * Make a DELETE request
-   */
   async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(`${this.baseUrl}${endpoint}`, {
-      method: 'DELETE',
-    });
+    return this.request<T>(`${this.baseUrl}${endpoint}`, { method: "DELETE" });
   }
 
-  /**
-   * Core request method with error handling
-   */
   private async request<T>(url: string, options: RequestInit): Promise<T> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
@@ -108,22 +146,18 @@ class ApiClient {
       const response = await fetch(url, {
         ...options,
         signal: controller.signal,
-        credentials: 'include', // Include cookies
+        credentials: "include",
       });
 
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new ApiError(
-          `HTTP ${response.status}`,
-          response.status,
-          await response.text()
-        );
+        throw new ApiError(`HTTP ${response.status}`, response.status, await response.text());
       }
 
-      const contentType = response.headers.get('content-type');
-      if (contentType?.includes('application/json')) {
-        return await response.json();
+      const contentType = response.headers.get("content-type") ?? "";
+      if (contentType.includes("application/json")) {
+        return (await response.json()) as T;
       }
 
       return (await response.text()) as T;
@@ -134,115 +168,144 @@ class ApiClient {
         throw error;
       }
 
-      if (error instanceof TypeError && error.message === 'Failed to fetch') {
-        throw new ApiError(
-          ERROR_MESSAGES.NETWORK_ERROR,
-          0,
-          'Network request failed'
-        );
+      if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
+        throw new ApiError(ERROR_MESSAGES.NETWORK_ERROR, 0, "Network request failed");
       }
 
-      throw new ApiError(
-        ERROR_MESSAGES.SERVER_ERROR,
-        HTTP_STATUS.SERVER_ERROR,
-        String(error)
-      );
+      throw new ApiError(ERROR_MESSAGES.SERVER_ERROR, HTTP_STATUS.SERVER_ERROR, String(error));
     }
   }
 }
 
-/**
- * Custom error class for API errors
- */
-export class ApiError extends Error {
-  constructor(
-    message: string,
-    public statusCode: number,
-    public details: string
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
-}
+export { ApiError };
 
-// Export singleton instance
 export const api = new ApiClient();
 
-/**
- * Portfolio API methods
- */
-export const portfolioApi = {
-  getAll: (category?: string) =>
-    api.get<PaginatedResponse<any>>(API_ENDPOINTS.PORTFOLIO, { category }),
-  getByCategory: (category: string) =>
-    api.get<PaginatedResponse<any>>(API_ENDPOINTS.PORTFOLIO, { category }),
-  getById: (id: string) =>
-    api.get<any>(`${API_ENDPOINTS.PORTFOLIO}/${id}`),
+export function unwrapCollection<T>(payload: unknown): T[] {
+  if (Array.isArray(payload)) {
+    return payload as T[];
+  }
+
+  if (payload && typeof payload === "object") {
+    const boxed = payload as ApiEnvelope<T> & {
+      results?: T[];
+      data?: T[] | { items?: T[]; results?: T[] };
+    };
+
+    if (Array.isArray(boxed.items)) {
+      return boxed.items;
+    }
+
+    if (Array.isArray(boxed.data)) {
+      return boxed.data;
+    }
+
+    if (boxed.data && typeof boxed.data === "object") {
+      if (Array.isArray(boxed.data.items)) {
+        return boxed.data.items;
+      }
+
+      if (Array.isArray(boxed.data.results)) {
+        return boxed.data.results;
+      }
+    }
+
+    if (Array.isArray(boxed.results)) {
+      return boxed.results;
+    }
+  }
+
+  return [];
+}
+
+export function unwrapSingle<T>(payload: unknown): T | null {
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+
+  const boxed = payload as ApiEnvelope<T> & {
+    user?: T;
+    item?: T;
+  };
+
+  if (boxed.data && typeof boxed.data === "object") {
+    return boxed.data;
+  }
+
+  if (boxed.user && typeof boxed.user === "object") {
+    return boxed.user;
+  }
+
+  if (boxed.item && typeof boxed.item === "object") {
+    return boxed.item;
+  }
+
+  return payload as T;
+}
+
+export const authApi = {
+  register: (data: AuthPayload) => api.post<ApiResponse<User>>(`${API_ENDPOINTS.AUTH}/register`, data),
+  login: (data: AuthPayload) => api.post<ApiResponse<User>>(`${API_ENDPOINTS.AUTH}/login`, data),
+  registerStaff: (data: AuthPayload, superadminToken?: string) =>
+    fetch(`${API_BASE_URL}${API_ENDPOINTS.AUTH}/staff/register`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...(superadminToken ? { Authorization: `Bearer ${superadminToken}` } : {}),
+      },
+      body: JSON.stringify(data),
+    }).then(async (res) => {
+      if (!res.ok) {
+        throw new ApiError(`HTTP ${res.status}`, res.status, await res.text());
+      }
+      return (await res.json()) as ApiResponse<User>;
+    }),
+  loginStaff: (data: AuthPayload) => api.post<ApiResponse<User>>(`${API_ENDPOINTS.AUTH}/staff/login`, data),
+  me: () => api.get<ApiResponse<User>>(`${API_ENDPOINTS.AUTH}/me`),
 };
 
-/**
- * Booking API methods
- */
 export const bookingApi = {
-  create: (data: any) =>
-    api.post<ApiResponse<any>>(API_ENDPOINTS.BOOKINGS, data),
-  getAll: () =>
-    api.get<PaginatedResponse<any>>(API_ENDPOINTS.BOOKINGS),
-  getById: (id: string) =>
-    api.get<any>(`${API_ENDPOINTS.BOOKINGS}/${id}`),
-  update: (id: string, data: any) =>
-    api.put<ApiResponse<any>>(`${API_ENDPOINTS.BOOKINGS}/${id}`, data),
-  delete: (id: string) =>
-    api.delete<ApiResponse<any>>(`${API_ENDPOINTS.BOOKINGS}/${id}`),
+  create: (data: BookingPayload) => api.post<ApiResponse<unknown>>(API_ENDPOINTS.BOOKINGS, data),
+  getAll: () => api.get<unknown>(API_ENDPOINTS.BOOKINGS),
+  getById: (id: string) => api.get<unknown>(`${API_ENDPOINTS.BOOKINGS}/${id}`),
+  update: (id: string, data: Partial<BookingPayload>) => api.put<ApiResponse<unknown>>(`${API_ENDPOINTS.BOOKINGS}/${id}`, data),
+  delete: (id: string) => api.delete<ApiResponse<unknown>>(`${API_ENDPOINTS.BOOKINGS}/${id}`),
 };
 
-/**
- * Blog API methods
- */
 export const blogApi = {
-  getAll: (page?: number, pageSize?: number) =>
-    api.get<PaginatedResponse<any>>(API_ENDPOINTS.BLOG, { page, pageSize }),
-  getBySlug: (slug: string) =>
-    api.get<any>(`${API_ENDPOINTS.BLOG}/${slug}`),
-  create: (data: any) =>
-    api.post<ApiResponse<any>>(API_ENDPOINTS.BLOG, data),
-  update: (id: string, data: any) =>
-    api.put<ApiResponse<any>>(`${API_ENDPOINTS.BLOG}/${id}`, data),
-  delete: (id: string) =>
-    api.delete<ApiResponse<any>>(`${API_ENDPOINTS.BLOG}/${id}`),
-  addComment: (postId: string, data: any) =>
-    api.post<ApiResponse<any>>(`${API_ENDPOINTS.BLOG}/${postId}/comments`, data),
-  getComments: (postId: string) =>
-    api.get<PaginatedResponse<any>>(`${API_ENDPOINTS.BLOG}/${postId}/comments`),
+  getAll: () => api.get<unknown>(API_ENDPOINTS.BLOG),
+  getById: (id: string) => api.get<unknown>(`${API_ENDPOINTS.BLOG}/${id}`),
+  create: (data: BlogPayload) => api.post<ApiResponse<unknown>>(API_ENDPOINTS.BLOG, data),
+  update: (id: string, data: Partial<BlogPayload>) => api.put<ApiResponse<unknown>>(`${API_ENDPOINTS.BLOG}/${id}`, data),
+  delete: (id: string) => api.delete<ApiResponse<unknown>>(`${API_ENDPOINTS.BLOG}/${id}`),
 };
 
-/**
- * Review API methods
- */
 export const reviewApi = {
-  getAll: (page?: number, pageSize?: number) =>
-    api.get<PaginatedResponse<any>>(API_ENDPOINTS.REVIEWS, { page, pageSize }),
-  create: (data: any) =>
-    api.post<ApiResponse<any>>(API_ENDPOINTS.REVIEWS, data),
-  delete: (id: string) =>
-    api.delete<ApiResponse<any>>(`${API_ENDPOINTS.REVIEWS}/${id}`),
+  getAll: () => api.get<unknown>(API_ENDPOINTS.REVIEWS),
+  getById: (id: string) => api.get<unknown>(`${API_ENDPOINTS.REVIEWS}/${id}`),
+  create: (data: ReviewPayload) => api.post<ApiResponse<unknown>>(API_ENDPOINTS.REVIEWS, data),
+  update: (id: string, data: Partial<ReviewPayload>) => api.put<ApiResponse<unknown>>(`${API_ENDPOINTS.REVIEWS}/${id}`, data),
+  delete: (id: string) => api.delete<ApiResponse<unknown>>(`${API_ENDPOINTS.REVIEWS}/${id}`),
 };
 
-/**
- * Shop API methods
- */
 export const shopApi = {
-  getProducts: (page?: number, pageSize?: number) =>
-    api.get<PaginatedResponse<any>>(API_ENDPOINTS.PRODUCTS, { page, pageSize }),
-  getProductById: (id: string) =>
-    api.get<any>(`${API_ENDPOINTS.PRODUCTS}/${id}`),
-  createOrder: (data: any) =>
-    api.post<ApiResponse<any>>(API_ENDPOINTS.ORDERS, data),
-  getOrders: () =>
-    api.get<PaginatedResponse<any>>(API_ENDPOINTS.ORDERS),
-  getOrderById: (id: string) =>
-    api.get<any>(`${API_ENDPOINTS.ORDERS}/${id}`),
+  getProducts: () => api.get<unknown>(API_ENDPOINTS.SHOP),
+  getProductById: (id: string) => api.get<unknown>(`${API_ENDPOINTS.SHOP}/${id}`),
+  createProduct: (data: ProductPayload) => api.post<ApiResponse<unknown>>(API_ENDPOINTS.SHOP, data),
+  updateProduct: (id: string, data: Partial<ProductPayload>) => api.put<ApiResponse<unknown>>(`${API_ENDPOINTS.SHOP}/${id}`, data),
+  deleteProduct: (id: string) => api.delete<ApiResponse<unknown>>(`${API_ENDPOINTS.SHOP}/${id}`),
+  createOrder: (data: OrderPayload) => api.post<ApiResponse<unknown>>(API_ENDPOINTS.ORDER, data),
+  getOrders: () => api.get<unknown>(API_ENDPOINTS.ORDERS),
+  getAllOrders: () => api.get<unknown>(`${API_ENDPOINTS.ORDERS}/all`),
+  deleteOrder: (id: string) => api.delete<ApiResponse<unknown>>(`${API_ENDPOINTS.ORDER}/${id}`),
+};
+
+export const adminApi = {
+  getUsers: () => api.get<unknown>(`${API_ENDPOINTS.ADMIN}/users`),
+  deleteUser: (id: string) => api.delete<ApiResponse<unknown>>(`${API_ENDPOINTS.ADMIN}/delete-user/${id}`),
+  makeAdmin: (id: string) => api.put<ApiResponse<unknown>>(`${API_ENDPOINTS.ADMIN}/make-admin/${id}`),
+  removeAdmin: (id: string) => api.put<ApiResponse<unknown>>(`${API_ENDPOINTS.ADMIN}/remove-admin/${id}`),
 };
 
 export default api;
-

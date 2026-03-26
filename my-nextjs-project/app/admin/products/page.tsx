@@ -1,19 +1,29 @@
 "use client";
 import { useEffect, useState } from "react";
-import axios from "@/lib/axios";
-import ProductModal from "../components/admin/ProductModal";
+import ProductModal from "@/components/admin/ProductModal";
+import { shopApi, unwrapCollection } from "@/lib/api";
+
+type Product = {
+  _id: string;
+  name: string;
+  price: number;
+  stock: number;
+  images?: string[];
+  description?: string;
+  category?: string;
+};
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const [editProduct, setEditProduct] = useState<any | null>(null);
+  const [editProduct, setEditProduct] = useState<Product | null>(null);
 
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("/shop");
-      setProducts(res.data);
+      const res = await shopApi.getProducts();
+      setProducts(unwrapCollection(res));
     } catch (e) {
       console.error(e);
     } finally { setLoading(false); }
@@ -23,7 +33,7 @@ export default function ProductsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete product?")) return;
-    await axios.delete(`/shop/${id}`);
+    await shopApi.deleteProduct(id);
     fetchProducts();
   };
 

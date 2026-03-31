@@ -1,0 +1,73 @@
+name: Detect Cross-Repo Push Attempts
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - main
+
+jobs:
+  check-fork-pr:
+    name: Check for Fork / Cross-Repo Pull Requests
+    runs-on: ubuntu-latest
+    permissions: {}
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Detect if PR originates from a fork
+        env:
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.repository }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          echo "Base repository  : $BASE_REPO"
+          echo "Head repository  : $HEAD_REPO"
+          echo "PR author        : $PR_AUTHOR"
+          echo "PR number        : #$PR_NUMBER"
+          echo "PR title         : $PR_TITLE"
+          echo "Head SHA         : $HEAD_SHA"
+          echo ""
+          if [ -z "$HEAD_REPO" ]; then
+            echo "⚠️  CROSS-REPO PUSH DETECTED"
+            echo "The source repository is unavailable (the fork may have been deleted)."
+            echo "  Target : $BASE_REPO"
+            echo ""
+            echo "Please review this PR carefully before merging."
+          elif [ "$HEAD_REPO" != "$BASE_REPO" ]; then
+            echo "⚠️  CROSS-REPO PUSH DETECTED"
+            echo "This pull request originates from a fork or external repository."
+            echo "  Source : $HEAD_REPO"
+            echo "  Target : $BASE_REPO"
+            echo ""
+            echo "Please review this PR carefully before merging."
+          else
+            echo "✅ PR originates from within the same repository ($BASE_REPO). No cross-repo push detected."
+          fi
+
+  audit-direct-push:
+    name: Audit Direct Push to Main
+    runs-on: ubuntu-latest
+    permissions: {}
+    if: github.event_name == 'push'
+    steps:
+      - name: Report push details
+        env:
+          PUSHER: ${{ github.actor }}
+          REPO: ${{ github.repository }}
+          REF: ${{ github.ref }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          COMMIT_AUTHOR_NAME: ${{ github.event.head_commit.author.name }}
+          COMMIT_AUTHOR_EMAIL: ${{ github.event.head_commit.author.email }}
+        run: |
+          echo "Repository       : $REPO"
+          echo "Ref              : $REF"
+          echo "Pushed by        : $PUSHER"
+          echo "Commit SHA       : $COMMIT_SHA"
+          echo "Commit message   : $COMMIT_MESSAGE"
+          echo "Commit author    : $COMMIT_AUTHOR_NAME <$COMMIT_AUTHOR_EMAIL>"
+          echo ""
+          echo "✅ Direct push recorded. Review the commit details above."

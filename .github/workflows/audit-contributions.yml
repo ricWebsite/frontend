@@ -1,4 +1,8 @@
-name: Detect Cross-Repo Push Attempts
+name: Audit External Contributions
+
+# Contributions from external private repositories outside this organisation
+# are explicitly permitted. This workflow records their details for audit
+# purposes only — no action is taken to block or flag them.
 
 on:
   pull_request:
@@ -8,13 +12,13 @@ on:
       - main
 
 jobs:
-  check-fork-pr:
-    name: Check for Fork / Cross-Repo Pull Requests
+  audit-pr:
+    name: Audit Pull Request Source
     runs-on: ubuntu-latest
     permissions: {}
     if: github.event_name == 'pull_request'
     steps:
-      - name: Detect if PR originates from a fork
+      - name: Log pull request details
         env:
           HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
           BASE_REPO: ${{ github.repository }}
@@ -24,27 +28,19 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           echo "Base repository  : $BASE_REPO"
-          echo "Head repository  : $HEAD_REPO"
+          echo "Head repository  : ${HEAD_REPO:-<unavailable — fork may have been deleted>}"
           echo "PR author        : $PR_AUTHOR"
           echo "PR number        : #$PR_NUMBER"
           echo "PR title         : $PR_TITLE"
           echo "Head SHA         : $HEAD_SHA"
           echo ""
-          if [ -z "$HEAD_REPO" ]; then
-            echo "⚠️  CROSS-REPO PUSH DETECTED"
-            echo "The source repository is unavailable (the fork may have been deleted)."
-            echo "  Target : $BASE_REPO"
-            echo ""
-            echo "Please review this PR carefully before merging."
-          elif [ "$HEAD_REPO" != "$BASE_REPO" ]; then
-            echo "⚠️  CROSS-REPO PUSH DETECTED"
-            echo "This pull request originates from a fork or external repository."
-            echo "  Source : $HEAD_REPO"
-            echo "  Target : $BASE_REPO"
-            echo ""
-            echo "Please review this PR carefully before merging."
+          if [ -z "$HEAD_REPO" ] || [ "$HEAD_REPO" != "$BASE_REPO" ]; then
+            echo "ℹ️  External contribution recorded."
+            echo "This PR originates from outside $BASE_REPO."
+            echo "External private-repository contributions are allowed."
           else
-            echo "✅ PR originates from within the same repository ($BASE_REPO). No cross-repo push detected."
+            echo "ℹ️  Internal contribution recorded."
+            echo "This PR originates from within $BASE_REPO."
           fi
 
   audit-direct-push:
@@ -53,7 +49,7 @@ jobs:
     permissions: {}
     if: github.event_name == 'push'
     steps:
-      - name: Report push details
+      - name: Log push details
         env:
           PUSHER: ${{ github.actor }}
           REPO: ${{ github.repository }}
@@ -70,4 +66,4 @@ jobs:
           echo "Commit message   : $COMMIT_MESSAGE"
           echo "Commit author    : $COMMIT_AUTHOR_NAME <$COMMIT_AUTHOR_EMAIL>"
           echo ""
-          echo "✅ Direct push recorded. Review the commit details above."
+          echo "ℹ️  Direct push to main recorded."

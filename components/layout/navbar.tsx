@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Menu, X, User, LogOut, LayoutDashboard, ShoppingCart, Home, Settings } from "lucide-react"
 import { useCart } from "@/lib/store/cart"
+import { API_BASE_URL, API_ENDPOINTS } from "@/shared/const"
 
 const publicNavItems = [
   { href: "/", label: "Home" },
@@ -30,7 +31,10 @@ export function Navbar() {
   const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0)
   
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" })
+    await fetch(`${API_BASE_URL}${API_ENDPOINTS.AUTH}/logout`, {
+      method: "POST",
+      credentials: "include",
+    })
     logout()
   }
   

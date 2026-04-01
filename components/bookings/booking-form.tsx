@@ -14,8 +14,15 @@ import { Spinner } from "@/components/ui/spinner"
 import { FieldGroup, Field, FieldLabel } from "@/components/ui/field"
 import { CalendarIcon, CheckCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { serviceTypes } from "@/lib/data/bookings"
+import { bookingApi } from "@/lib/api"
 import type { ServiceType } from "@/lib/types"
+
+const serviceTypes: Array<{ value: ServiceType; label: string; duration: string; price: string }> = [
+  { value: "tattoo-consultation", label: "Tattoo Consultation", duration: "30 mins", price: "Free" },
+  { value: "tattoo-session", label: "Tattoo Session", duration: "2-6 hrs", price: "From KES 10,000" },
+  { value: "custom-artwork", label: "Custom Artwork", duration: "1-2 weeks", price: "From KES 5,000" },
+  { value: "portrait-commission", label: "Portrait Commission", duration: "3-7 days", price: "From KES 7,500" },
+]
 
 const timeSlots = [
   "09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00"
@@ -34,15 +41,24 @@ export function BookingForm() {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!serviceType || !date || !time) return
+    if (!serviceType || !date || !time || !user) return
     
     setIsLoading(true)
-    
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    
-    setIsLoading(false)
-    setIsSuccess(true)
+
+    try {
+      await bookingApi.create({
+        name: user.fullName,
+        email: user.email,
+        phone: "",
+        date: format(date, "yyyy-MM-dd"),
+        time,
+        service: serviceType,
+        description: notes,
+      })
+      setIsSuccess(true)
+    } finally {
+      setIsLoading(false)
+    }
   }
   
   if (isSuccess) {

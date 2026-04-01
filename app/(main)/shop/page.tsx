@@ -6,24 +6,24 @@ import { Button } from "@/components/ui/button"
 import { ProductCard } from "@/components/shop/product-card"
 import { Spinner } from "@/components/ui/spinner"
 import type { Product } from "@/lib/types"
+import { shopApi, unwrapCollection } from "@/lib/api"
 
 export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [activeCategory, setActiveCategory] = useState("all")
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch("/api/products")
-        if (!response.ok) throw new Error("Failed to fetch products")
-        const data = await response.json()
-        setProducts(data.items || data)
-      } catch (err) {
-        console.warn("Using fallback mock data for products")
-        const { products: mockData } = await import("@/lib/data/products")
-        setProducts(mockData)
+        setError(null)
+        const payload = await shopApi.getProducts()
+        setProducts(unwrapCollection<Product>(payload))
+      } catch {
+        setProducts([])
+        setError("Failed to load shop products from backend.")
       } finally {
         setIsLoading(false)
       }
@@ -46,6 +46,12 @@ export default function ShopPage() {
           Take a piece of art home with you. Browse prints, canvas artwork, books, and merchandise.
         </p>
       </div>
+
+      {error && (
+        <div className="mb-6 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-center text-sm text-destructive">
+          {error}
+        </div>
+      )}
       
         {isLoading ? (
           <div className="flex justify-center py-12">

@@ -1,15 +1,17 @@
 "use client"
 
-import { use, useState } from "react"
+import { use, useEffect, useMemo, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { getProduct, products } from "@/lib/data/products"
+import { shopApi, unwrapCollection } from "@/lib/api"
 import { useCart } from "@/lib/store/cart"
 import { ArrowLeft, Minus, Plus, ShoppingCart, Check } from "lucide-react"
 import { ProductCard } from "@/components/shop/product-card"
+import type { Product } from "@/lib/types"
+import { Spinner } from "@/components/ui/spinner"
 
 interface ProductPageProps {
   params: Promise<{ id: string }>
@@ -17,12 +19,41 @@ interface ProductPageProps {
 
 export default function ProductPage({ params }: ProductPageProps) {
   const { id } = use(params)
-  const product = getProduct(id)
+  const [products, setProducts] = useState<Product[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const [addedToCart, setAddedToCart] = useState(false)
   const { addItem } = useCart()
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const payload = await shopApi.getProducts()
+        setProducts(unwrapCollection<Product>(payload))
+        setHasError(false)
+      } catch {
+        setProducts([])
+        setHasError(true)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    void loadProducts()
+  }, [])
+
+  const product = useMemo(() => products.find((entry) => entry.id === id), [products, id])
   
-  if (!product) {
+  if (isLoading) {
+    return (
+      <div className="container mx-auto flex justify-center px-4 py-16">
+        <Spinner />
+      </div>
+    )
+  }
+
+  if (!product || hasError) {
     notFound()
   }
   

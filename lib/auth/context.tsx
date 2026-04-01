@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
 import type { User, Session, UserRole } from "@/lib/types"
+import { authApi, unwrapSingle } from "@/lib/api"
 
 interface AuthContextType {
   user: User | null
@@ -17,6 +18,38 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+function normalizeSession(payload: unknown): Session | null {
+  if (!payload || typeof payload !== "object") return null
+
+  const boxed = payload as {
+    session?: Session
+    data?: Session | { session?: Session; user?: User; token?: string; expiresAt?: string }
+    user?: User
+    token?: string
+    expiresAt?: string
+  }
+
+  if (boxed.session) return boxed.session
+  if (boxed.data && typeof boxed.data === "object" && "session" in boxed.data && boxed.data.session) {
+    return boxed.data.session as Session
+  }
+
+  const user = unwrapSingle<User>(payload)
+  const token = boxed.token || (boxed.data && typeof boxed.data === "object" && "token" in boxed.data ? boxed.data.token : undefined)
+  const expiresAt =
+    boxed.expiresAt ||
+    (boxed.data && typeof boxed.data === "object" && "expiresAt" in boxed.data ? boxed.data.expiresAt : undefined) ||
+    new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+
+  if (!user || typeof token !== "string") return null
+
+  return {
+    user,
+    token,
+    expiresAt,
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -44,17 +77,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      })
-      const data = await res.json()
-      
-      if (data.success && data.session) {
-        setSession(data.session)
-        setUser(data.session.user)
-        localStorage.setItem("nozah_session", JSON.stringify(data.session))
+      const data = await authApi.login({ email, password })
+      const nextSession = normalizeSession(data)
+
+      if (nextSession) {
+        setSession(nextSession)
+        setUser(nextSession.user)
+        localStorage.setItem("nozah_session", JSON.stringify(nextSession))
         return { success: true }
       }
       return { success: false, error: data.error || "Login failed" }
@@ -65,17 +94,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const staffLogin = useCallback(async (email: string, password: string) => {
     try {
-      const res = await fetch("/api/auth/staff/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      })
-      const data = await res.json()
-      
-      if (data.success && data.session) {
-        setSession(data.session)
-        setUser(data.session.user)
-        localStorage.setItem("nozah_session", JSON.stringify(data.session))
+      const data = await authApi.loginStaff({ email, password })
+      const nextSession = normalizeSession(data)
+
+      if (nextSession) {
+        setSession(nextSession)
+        setUser(nextSession.user)
+        localStorage.setItem("nozah_session", JSON.stringify(nextSession))
         return { success: true }
       }
       return { success: false, error: data.error || "Login failed" }
@@ -86,17 +111,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(async (email: string, password: string, fullName: string) => {
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, fullName }),
-      })
-      const data = await res.json()
-      
-      if (data.success && data.session) {
-        setSession(data.session)
-        setUser(data.session.user)
-        localStorage.setItem("nozah_session", JSON.stringify(data.session))
+      const data = await authApi.register({ email, password, fullName, name: fullName })
+      const nextSession = normalizeSession(data)
+
+      if (nextSession) {
+        setSession(nextSession)
+        setUser(nextSession.user)
+        localStorage.setItem("nozah_session", JSON.stringify(nextSession))
         return { success: true }
       }
       return { success: false, error: data.error || "Registration failed" }
@@ -107,17 +128,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const staffRegister = useCallback(async (email: string, password: string, fullName: string, role: UserRole) => {
     try {
-      const res = await fetch("/api/auth/staff/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, fullName, role }),
-      })
-      const data = await res.json()
-      
-      if (data.success && data.session) {
-        setSession(data.session)
-        setUser(data.session.user)
-        localStorage.setItem("nozah_session", JSON.stringify(data.session))
+      const data = await authApi.registerStaff({ email, password, fullName, name: fullName, role })
+      const nextSession = normalizeSession(data)
+
+      if (nextSession) {
+        setSession(nextSession)
+        setUser(nextSession.user)
+        localStorage.setItem("nozah_session", JSON.stringify(nextSession))
         return { success: true }
       }
       return { success: false, error: data.error || "Registration failed" }

@@ -35,6 +35,8 @@ export interface AuthPayload {
   email: string;
   password: string;
   name?: string;
+  fullName?: string;
+  role?: "user" | "admin" | "superadmin";
 }
 
 export interface VerifyEmailPayload {
@@ -58,9 +60,14 @@ export interface BookingPayload {
 
 export interface BlogPayload {
   title: string;
+  slug?: string;
   excerpt?: string;
   content: string;
   category?: string;
+}
+
+export interface BlogCommentPayload {
+  content: string;
 }
 
 export interface ReviewPayload {
@@ -346,6 +353,12 @@ export const authApi = {
   me: () => api.get<ApiResponse<User>>(`${API_ENDPOINTS.AUTH}/me`),
 };
 
+export const portfolioApi = {
+  getAll: () => api.get<unknown>(API_ENDPOINTS.PORTFOLIO),
+  getByCategory: (category: string) => api.get<unknown>(API_ENDPOINTS.PORTFOLIO, { category }),
+  getById: (id: string) => api.get<unknown>(`${API_ENDPOINTS.PORTFOLIO}/${id}`),
+};
+
 export const bookingApi = {
   create: (data: BookingPayload) => api.post<ApiResponse<unknown>>(API_ENDPOINTS.BOOKINGS, data),
   getAll: () => api.get<unknown>(API_ENDPOINTS.BOOKINGS),
@@ -357,9 +370,13 @@ export const bookingApi = {
 export const blogApi = {
   getAll: () => api.get<unknown>(API_ENDPOINTS.BLOG),
   getById: (id: string) => api.get<unknown>(`${API_ENDPOINTS.BLOG}/${id}`),
+  getBySlug: (slug: string) => api.get<unknown>(`${API_ENDPOINTS.BLOG}/${slug}`),
   create: (data: BlogPayload) => api.post<ApiResponse<unknown>>(API_ENDPOINTS.BLOG, data),
   update: (id: string, data: Partial<BlogPayload>) => api.put<ApiResponse<unknown>>(`${API_ENDPOINTS.BLOG}/${id}`, data),
   delete: (id: string) => api.delete<ApiResponse<unknown>>(`${API_ENDPOINTS.BLOG}/${id}`),
+  getComments: (postId: string) => api.get<unknown>(`${API_ENDPOINTS.BLOG}/${postId}/comments`),
+  addComment: (postId: string, data: BlogCommentPayload) =>
+    api.post<ApiResponse<unknown>>(`${API_ENDPOINTS.BLOG}/${postId}/comments`, data),
 };
 
 export const reviewApi = {

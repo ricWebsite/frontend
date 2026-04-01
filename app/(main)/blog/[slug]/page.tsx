@@ -1,9 +1,9 @@
-import { use } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { format } from "date-fns"
-import { getBlogPost, getCommentsByPost, getBlogPosts } from "@/lib/data/blog-posts"
+import { blogApi, unwrapCollection } from "@/lib/api"
+import type { BlogPost, Comment } from "@/lib/types"
 import { CommentSection } from "@/components/blog/comment-section"
 import { PostCard } from "@/components/blog/post-card"
 import { ArrowLeft } from "lucide-react"
@@ -12,18 +12,38 @@ interface BlogPostPageProps {
   params: Promise<{ slug: string }>
 }
 
-export default function BlogPostPage({ params }: BlogPostPageProps) {
-  const { slug } = use(params)
-  const post = getBlogPost(slug)
+async function loadPostData(slug: string): Promise<{ post: BlogPost | null; comments: Comment[]; relatedPosts: BlogPost[] }> {
+  try {
+    const allPostsPayload = await blogApi.getAll()
+    const allPosts = unwrapCollection<BlogPost>(allPostsPayload)
+    const post = allPosts.find((entry) => entry.slug === slug) ?? null
+
+    if (!post) {
+      return { post: null, comments: [], relatedPosts: [] }
+    }
+
+    let comments: Comment[] = []
+    try {
+      const commentsPayload = await blogApi.getComments(post.id)
+      comments = unwrapCollection<Comment>(commentsPayload)
+    } catch {
+      comments = []
+    }
+
+    const relatedPosts = allPosts.filter((entry) => entry.id !== post.id).slice(0, 3)
+    return { post, comments, relatedPosts }
+  } catch {
+    return { post: null, comments: [], relatedPosts: [] }
+  }
+}
+
+export default async function BlogPostPage({ params }: BlogPostPageProps) {
+  const { slug } = await params
+  const { post, comments, relatedPosts } = await loadPostData(slug)
   
   if (!post) {
     notFound()
   }
-  
-  const comments = getCommentsByPost(post.id)
-  const relatedPosts = getBlogPosts(true)
-    .filter((p) => p.id !== post.id)
-    .slice(0, 3)
   
   return (
     <article className="container mx-auto px-4 py-12">

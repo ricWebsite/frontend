@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { GalleryGrid } from "@/components/portfolio/gallery-grid"
 import type { PortfolioItem, PortfolioCategory } from "@/lib/types"
 import { Spinner } from "@/components/ui/spinner"
+import { portfolioApi, unwrapCollection } from "@/lib/api"
 
 const categories: { value: PortfolioCategory | "all"; label: string }[] = [
   { value: "all", label: "All Work" },
@@ -21,19 +22,15 @@ function PortfolioContent() {
   const [error, setError] = useState<string | null>(null)
   
   useEffect(() => {
-    // Fetch from backend API or fallback to mock data
     const fetchPortfolio = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch("/api/portfolio")
-        if (!response.ok) throw new Error("Failed to fetch portfolio")
-        const data = await response.json()
-        setPortfolioItems(data.items || data)
-      } catch (err) {
-        // Fallback to mock data on error
-        console.warn("Using fallback mock data for portfolio")
-        const { portfolioItems: mockData } = await import("@/lib/data/portfolio")
-        setPortfolioItems(mockData)
+        setError(null)
+        const payload = await portfolioApi.getAll()
+        setPortfolioItems(unwrapCollection<PortfolioItem>(payload))
+      } catch {
+        setPortfolioItems([])
+        setError("Failed to load portfolio items from backend.")
       } finally {
         setIsLoading(false)
       }
@@ -79,6 +76,12 @@ function PortfolioContent() {
         ))}
       </div>
       
+      {error && (
+        <div className="mb-6 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-center text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
       {/* Gallery */}
       {filteredItems.length > 0 ? (
         <GalleryGrid items={filteredItems} />

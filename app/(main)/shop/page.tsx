@@ -1,14 +1,38 @@
+
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ProductCard } from "@/components/shop/product-card"
-import { products, getProductCategories } from "@/lib/data/products"
+import { Spinner } from "@/components/ui/spinner"
+import type { Product } from "@/lib/types"
 
 export default function ShopPage() {
+  const [products, setProducts] = useState<Product[]>([])
   const [activeCategory, setActiveCategory] = useState("all")
-  const categories = ["all", ...getProductCategories()]
+  const [isLoading, setIsLoading] = useState(true)
   
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setIsLoading(true)
+        const response = await fetch("/api/products")
+        if (!response.ok) throw new Error("Failed to fetch products")
+        const data = await response.json()
+        setProducts(data.items || data)
+      } catch (err) {
+        console.warn("Using fallback mock data for products")
+        const { products: mockData } = await import("@/lib/data/products")
+        setProducts(mockData)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    fetchProducts()
+  }, [])
+  
+  const categories = ["all", ...Array.from(new Set(products.map(p => p.category)))]
   const filteredProducts = activeCategory === "all"
     ? products
     : products.filter((p) => p.category === activeCategory)
@@ -23,6 +47,12 @@ export default function ShopPage() {
         </p>
       </div>
       
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <Spinner />
+          </div>
+        ) : (
+          <>
       {/* Category filters */}
       <div className="mb-8 flex flex-wrap justify-center gap-2">
         {categories.map((category) => (
@@ -50,6 +80,8 @@ export default function ShopPage() {
           <p className="text-muted-foreground">No products found in this category.</p>
         </div>
       )}
+          </>
+        )}
     </div>
   )
 }

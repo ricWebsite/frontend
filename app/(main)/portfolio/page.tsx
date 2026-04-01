@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import { useState, Suspense, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { GalleryGrid } from "@/components/portfolio/gallery-grid"
-import { portfolioItems } from "@/lib/data/portfolio"
-import type { PortfolioCategory } from "@/lib/types"
+import type { PortfolioItem, PortfolioCategory } from "@/lib/types"
+import { Spinner } from "@/components/ui/spinner"
 
 const categories: { value: PortfolioCategory | "all"; label: string }[] = [
   { value: "all", label: "All Work" },
@@ -16,10 +16,43 @@ const categories: { value: PortfolioCategory | "all"; label: string }[] = [
 
 function PortfolioContent() {
   const [activeCategory, setActiveCategory] = useState<PortfolioCategory | "all">("all")
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  useEffect(() => {
+    // Fetch from backend API or fallback to mock data
+    const fetchPortfolio = async () => {
+      try {
+        setIsLoading(true)
+        const response = await fetch("/api/portfolio")
+        if (!response.ok) throw new Error("Failed to fetch portfolio")
+        const data = await response.json()
+        setPortfolioItems(data.items || data)
+      } catch (err) {
+        // Fallback to mock data on error
+        console.warn("Using fallback mock data for portfolio")
+        const { portfolioItems: mockData } = await import("@/lib/data/portfolio")
+        setPortfolioItems(mockData)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    fetchPortfolio()
+  }, [])
   
   const filteredItems = activeCategory === "all"
     ? portfolioItems
     : portfolioItems.filter((item) => item.category === activeCategory)
+  
+  if (isLoading) {
+    return (
+      <div className="container mx-auto mt-12 flex justify-center px-4">
+        <Spinner />
+      </div>
+    )
+  }
   
   return (
     <div className="container mx-auto px-4 py-12">

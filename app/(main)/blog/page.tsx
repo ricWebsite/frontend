@@ -1,8 +1,25 @@
 import { PostCard } from "@/components/blog/post-card"
-import { getBlogPosts } from "@/lib/data/blog-posts"
+import { Spinner } from "@/components/ui/spinner"
+import type { BlogPost } from "@/lib/types"
 
-export default function BlogPage() {
-  const posts = getBlogPosts(true) // Only published posts
+async function getBlogPosts(): Promise<BlogPost[]> {
+  try {
+    const response = await fetch(process.env.API_URL ? `${process.env.API_URL}/api/blog` : "/api/blog", {
+      next: { revalidate: 3600 } // Cache for 1 hour
+    })
+    if (!response.ok) throw new Error("Failed to fetch blog posts")
+    const data = await response.json()
+    return data.items || data || []
+  } catch (err) {
+    console.warn("Using fallback mock data for blog posts")
+    // Fallback to mock data
+    const { getBlogPosts: getMockPosts } = await import("@/lib/data/blog-posts")
+    return getMockPosts(true)
+  }
+}
+
+export default async function BlogPage() {
+  const posts = await getBlogPosts()
   const [featuredPost, ...otherPosts] = posts
   
   return (

@@ -1,92 +1,76 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { decodeJwt } from "jose";
 
-// Routes that require user authentication
-const protectedUserRoutes = ["/home", "/bookings"]
+const ADMIN_ROUTES = ["/admin"];
+const PROTECTED_ROUTES = ["/home", "/bookings"];
+const ADMIN_PUBLIC_ROUTES = ["/admin/login", "/admin/register"];
 
-// Routes that require admin authentication
-const protectedAdminRoutes = [
-  "/admin/dashboard",
-  "/admin/portfolio",
-  "/admin/products",
-  "/admin/orders",
-  "/admin/bookings",
-  "/admin/blog",
-  "/admin/reviews",
-  "/admin/users",
-]
+function getAuthToken(request: NextRequest): string | null {
+	const tokenCookieNames = ["auth_token", "token", "access_token", "accessToken", "jwt"];
 
-// Admin auth routes (login/register)
-const adminAuthRoutes = ["/admin/login", "/admin/register"]
+	for (const cookieName of tokenCookieNames) {
+		const value = request.cookies.get(cookieName)?.value;
+		if (value) {
+			return value;
+		}
+	}
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-  
-  // Get session from cookie
-  const sessionCookie = request.cookies.get("nozah_session")
-  let session = null
-  
-  if (sessionCookie) {
-    try {
-      session = JSON.parse(sessionCookie.value)
-      // Check if session is expired
-      if (new Date(session.expiresAt) < new Date()) {
-        session = null
-      }
-    } catch {
-      session = null
-    }
-  }
-  
-  const isAuthenticated = !!session
-  const userRole = session?.user?.role || null
-  const isAdmin = userRole === "admin" || userRole === "superadmin"
-  
-  // Check if trying to access protected user routes without auth
-  if (protectedUserRoutes.some((route) => pathname.startsWith(route))) {
-    if (!isAuthenticated) {
-      const url = request.nextUrl.clone()
-      url.pathname = "/login"
-      url.searchParams.set("returnTo", pathname)
-      return NextResponse.redirect(url)
-    }
-  }
-  
-  // Check if trying to access protected admin routes
-  if (protectedAdminRoutes.some((route) => pathname.startsWith(route))) {
-    if (!isAuthenticated) {
-      // Not logged in - redirect to admin login
-      const url = request.nextUrl.clone()
-      url.pathname = "/admin/login"
-      url.searchParams.set("returnTo", pathname)
-      return NextResponse.redirect(url)
-    }
-    
-    if (!isAdmin) {
-      // Logged in but not admin - redirect to home
-      const url = request.nextUrl.clone()
-      url.pathname = "/home"
-      return NextResponse.redirect(url)
-    }
-  }
-  
-  // Check if admin trying to access admin auth routes
-  if (adminAuthRoutes.some((route) => pathname === route)) {
-    if (isAuthenticated && isAdmin) {
-      // Admin already logged in - redirect to dashboard
-      const url = request.nextUrl.clone()
-      url.pathname = "/admin/dashboard"
-      return NextResponse.redirect(url)
-    }
-  }
-  
-  return NextResponse.next()
+	return null;
+}
+
+function getRoleFromToken(token: string): string | null {
+	try {
+		const payload = decodeJwt(token);
+		const role = payload.role;
+		return typeof role === "string" ? role : null;
+	} catch {
+		return null;
+	}
+}
+
+export async function middleware(request: NextRequest) {
+	const url = request.nextUrl;
+	const path = url.pathname;
+	const isAdminPublicRoute = ADMIN_PUBLIC_ROUTES.some((route) => path.startsWith(route));
+
+	const token = getAuthToken(request);
+
+	if (!token && PROTECTED_ROUTES.some((r) => path.startsWith(r))) {
+		const loginUrl = new URL("/login", request.url);
+		loginUrl.searchParams.set("returnTo", path);
+		return NextResponse.redirect(loginUrl);
+	}
+
+	if (!token && ADMIN_ROUTES.some((r) => path.startsWith(r)) && !isAdminPublicRoute) {
+		const loginUrl = new URL("/admin/login", request.url);
+		loginUrl.searchParams.set("returnTo", path);
+		return NextResponse.redirect(loginUrl);
+	}
+
+	if (token) {
+		const role = getRoleFromToken(token);
+
+		if (
+			ADMIN_ROUTES.some((r) => path.startsWith(r)) &&
+			!isAdminPublicRoute &&
+			role !== null &&
+			role !== "admin" &&
+			role !== "superadmin"
+		) {
+			return NextResponse.redirect(new URL("/home", request.url));
+		}
+
+		if (isAdminPublicRoute && (role === "admin" || role === "superadmin")) {
+			return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+		}
+
+		return NextResponse.next();
+	}
+
+	return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    "/home/:path*",
-    "/bookings/:path*",
-    "/admin/:path*",
-  ],
-}
+	matcher: ["/home/:path*", "/bookings/:path*", "/admin/:path*"],
+};

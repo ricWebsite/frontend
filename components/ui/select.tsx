@@ -55,7 +55,7 @@ function SelectContent({
   children,
   position = 'popper',
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Content>) {
+}: React.ComponentProps<typeof SelectPrimitive.Content> & { children?: React.ReactNode }) {
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -102,7 +102,7 @@ function SelectItem({
   className,
   children,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Item>) {
+}: React.ComponentProps<typeof SelectPrimitive.Item> & { children?: React.ReactNode }) {
   return (
     <SelectPrimitive.Item
       data-slot="select-item"

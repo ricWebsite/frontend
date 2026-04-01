@@ -147,6 +147,55 @@ class ApiClient {
     return this.request<T>(`${this.baseUrl}${endpoint}`, { method: "DELETE" });
   }
 
+  private getErrorMessageFromPayload(payload: unknown, fallback: string): string {
+    if (!payload) {
+      return fallback;
+    }
+
+    if (typeof payload === "string") {
+      return payload;
+    }
+
+    if (typeof payload === "object") {
+      const candidate = payload as {
+        message?: unknown;
+        error?: unknown;
+        errors?: unknown;
+      };
+
+      if (typeof candidate.message === "string" && candidate.message.trim().length > 0) {
+        return candidate.message;
+      }
+
+      if (typeof candidate.error === "string" && candidate.error.trim().length > 0) {
+        return candidate.error;
+      }
+
+      if (Array.isArray(candidate.errors)) {
+        const messages = candidate.errors
+          .map((item) => {
+            if (typeof item === "string") {
+              return item;
+            }
+
+            if (item && typeof item === "object" && "message" in item) {
+              const maybeMessage = (item as { message?: unknown }).message;
+              return typeof maybeMessage === "string" ? maybeMessage : null;
+            }
+
+            return null;
+          })
+          .filter((msg): msg is string => Boolean(msg && msg.trim().length > 0));
+
+        if (messages.length > 0) {
+          return messages.join(", ");
+        }
+      }
+    }
+
+    return fallback;
+  }
+
   private async request<T>(url: string, options: RequestInit): Promise<T> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
@@ -161,7 +210,16 @@ class ApiClient {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new ApiError(`HTTP ${response.status}`, response.status, await response.text());
+        const contentType = response.headers.get("content-type") ?? "";
+        const payload = contentType.includes("application/json")
+          ? await response.json()
+          : await response.text();
+
+        throw new ApiError(
+          this.getErrorMessageFromPayload(payload, `HTTP ${response.status}`),
+          response.status,
+          typeof payload === "string" ? payload : JSON.stringify(payload)
+        );
       }
 
       const contentType = response.headers.get("content-type") ?? "";
